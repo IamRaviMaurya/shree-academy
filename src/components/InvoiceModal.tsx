@@ -59,9 +59,11 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
     )
     : null;
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
+
+    printWindow.document.write('<html><body>Generating invoice for printing...</body></html>');
 
     // Generate table rows for all books
     const bookRows = records.map(record => {
@@ -83,6 +85,55 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
       .map(record => record.notes)
       .filter(note => note && note.trim())
       .join('; ');
+
+    // Generate QR code HTML if UPI URL exists
+    let qrCodeHtml = '';
+    if (upiUrl && teacher?.upiId) {
+      try {
+        const qrDataUrl = await QRCode.toDataURL(upiUrl, {
+          width: 120,
+          margin: 1,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        });
+        qrCodeHtml = `
+          <div style="margin-top: 24px; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; page-break-inside: avoid;">
+            <div style="margin-bottom: 16px; overflow: hidden; border-bottom: 1px solid #dcfce7; padding-bottom: 12px;">
+              <div style="font-size: 15px; font-weight: 700; color: #166534; float: left;">
+                <span style="display: inline-block; margin-right: 6px;">💳</span> Pay via UPI
+              </div>
+              <div style="font-size: 13px; color: #15803d; float: right; margin-top: 2px; font-weight: 500;">
+                Teacher: ${teacher.name}
+              </div>
+            </div>
+            <table style="width: 100%; border: none; margin: 0; padding: 0;">
+              <tr>
+                <td style="width: 140px; text-align: center; vertical-align: middle; border: none; padding: 0;">
+                  <img src="${qrDataUrl}" width="110" height="110" style="display: block; background: #ffffff; padding: 8px; border: 1px solid #d1d5db; border-radius: 8px; margin: 0 auto;" />
+                  <div style="font-size: 12px; font-weight: 600; color: #4b5563; margin-top: 10px;">
+                    Scan to pay ₹${totalAmount}
+                  </div>
+                </td>
+                <td style="vertical-align: middle; border: none; padding: 0 0 0 24px;">
+                  <div style="font-size: 13px; color: #374151; line-height: 1.8;">
+                    <div><strong style="color: #111827; display: inline-block; width: 65px;">UPI ID:</strong> ${teacher.upiId}</div>
+                    <div><strong style="color: #111827; display: inline-block; width: 65px;">Amount:</strong> ₹${totalAmount}</div>
+                    <div><strong style="color: #111827; display: inline-block; width: 65px;">Payee:</strong> ${teacher.name}</div>
+                    <div style="margin-top: 12px; color: #15803d; font-weight: 600; background: #dcfce7; display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 12px;">
+                      Scan QR code with any UPI app
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </div>
+        `;
+      } catch (error) {
+        console.error('Error generating QR code:', error);
+      }
+    }
 
     const invoiceHtml = `
       <!DOCTYPE html>
@@ -132,7 +183,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
             <table>
               <thead>
                 <tr>
-                  <th style="width: 40%">Book Name</th>
+                  <th style="width: 40%; text-align: left;">Book Name</th>
                   <th style="text-align: right">Price/Book</th>
                   <th style="text-align: center">Qty</th>
                   <th style="text-align: right">Total</th>
@@ -148,6 +199,8 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
             </table>
 
             ${allNotes ? '<div style="font-size: 12px; color: #666; margin-top: 8px; padding: 8px 10px; background: #f5f5f0; border-radius: 6px;">📝 Notes: ' + allNotes + '</div>' : ''}
+
+            ${qrCodeHtml}
 
             <div class="inv-footer">
               <div class="inv-sign">
@@ -165,6 +218,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
       </html>
     `;
 
+    printWindow.document.open();
     printWindow.document.write(invoiceHtml);
     printWindow.document.close();
   };
