@@ -85,7 +85,7 @@ export const Login: React.FC = () => {
         </Card>
 
         {/* Teacher Credentials Info */}
-        <Card className="mt-6 bg-gray-50 border-gray-200">
+        {/* <Card className="mt-6 bg-gray-50 border-gray-200">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Available Teacher Accounts:</h3>
           <div className="space-y-2 text-xs">
             {TEACHERS.map((teacher) => (
@@ -104,7 +104,7 @@ export const Login: React.FC = () => {
           <p className="text-xs text-gray-500 mt-3 text-center">
             ⚠️ Demo credentials - Use these to test different teacher accounts
           </p>
-        </Card>
+        </Card> */}
 
         <ToastContainer toasts={toasts} onRemove={removeToast} />
       </div>
