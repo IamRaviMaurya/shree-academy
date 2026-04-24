@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Teacher, LoginCredentials } from '../types';
-import { authenticateTeacher } from '../utils/auth';
+import { authenticateTeacher, getTeacherById } from '../utils/auth';
 
 interface AuthContextType {
   currentTeacher: Teacher | null;
@@ -21,8 +21,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const saved = localStorage.getItem(AUTH_STORAGE_KEY);
       if (saved) {
-        const teacher = JSON.parse(saved);
-        setCurrentTeacher(teacher);
+        const savedTeacher = JSON.parse(saved);
+        // Refresh teacher data from hardcoded list to get latest fields like upiId
+        const latestTeacher = getTeacherById(savedTeacher.id) || savedTeacher;
+        setCurrentTeacher(latestTeacher);
+        // Update local storage if it was refreshed
+        if (latestTeacher !== savedTeacher) {
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(latestTeacher));
+        }
       }
     } catch (error) {
       console.error('Error loading saved teacher:', error);
