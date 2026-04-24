@@ -15,6 +15,7 @@ interface InvoiceModalProps {
   onClose: () => void;
   onPrint: () => void;
   onShareWhatsApp: (records: BookRecord[]) => void;
+  isSharedView?: boolean;
 }
 
 export const InvoiceModal: React.FC<InvoiceModalProps> = ({
@@ -24,6 +25,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
   onClose,
   onPrint,
   onShareWhatsApp,
+  isSharedView = false,
 }) => {
   const invoiceRef = useRef<HTMLDivElement>(null);
 
@@ -389,14 +391,16 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Invoice Preview"
+      title={isSharedView ? "Your Invoice" : "Invoice Preview"}
       actions={
         <>
-          <Button variant="whatsapp" onClick={() => onShareWhatsApp(records)}>
-            💬 WhatsApp
-          </Button>
+          {!isSharedView && (
+            <Button variant="whatsapp" onClick={() => onShareWhatsApp(records)}>
+              💬 WhatsApp
+            </Button>
+          )}
           <Button onClick={handleSharePDF}>
-            📄 PDF
+            📄 Download PDF
           </Button>
           <Button variant="primary" onClick={handlePrint}>
             🖨 Print

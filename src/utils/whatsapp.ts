@@ -15,14 +15,14 @@ export const generateWhatsAppMessage = (records: BookRecord[], teacher?: Teacher
   );
   const totalBooks = records.reduce((sum, record) => sum + (record.qty || 0), 0);
 
-  let message = `*📚 Shree Academy*
+  let message = `*=== Shree Academy ===*
 *Book Issue Receipt — ${invoiceNumber}*
 ━━━━━━━━━━━━━━━━━
-👤 Student : ${studentName}
-${studentClass ? `🏫 Class   : ${studentClass}\n` : ''}💳 Payment : ${firstRecord.paymentStatus === 'cash' ? '💰 Cash' : firstRecord.paymentStatus === 'online' ? '💳 Online' : '⏳ Pending'}
-📚 Total Books : ${totalBooks}
+▶ Student : ${studentName}
+${studentClass ? `▶ Class   : ${studentClass}\n` : ''}▶ Payment : ${firstRecord.paymentStatus === 'cash' ? '[Cash]' : firstRecord.paymentStatus === 'online' ? '[Online]' : '[Pending]'}
+▶ Total Books : ${totalBooks}
 ━━━━━━━━━━━━━━━━━
-📖 *Books Issued:*`;
+*-- Books Issued --*`;
 
   records.forEach((record, index) => {
     const unitPrice = record.price || 0;
@@ -34,10 +34,10 @@ ${studentClass ? `🏫 Class   : ${studentClass}\n` : ''}💳 Payment : ${firstR
   });
 
   message += `\n━━━━━━━━━━━━━━━━━
-💵 *Grand Total: ${formatPrice(totalAmount)}*
+*=> Grand Total: ${formatPrice(totalAmount)}*
 ━━━━━━━━━━━━━━━━━
-📅 Issue Date : ${firstRecord.date || '—'}
-${firstRecord.ret ? `🔄 Return by  : ${firstRecord.ret}\n` : ''}`;
+▶ Issue Date : ${firstRecord.date || '—'}
+${firstRecord.ret ? `▶ Return by  : ${firstRecord.ret}\n` : ''}`;
 
   // Collect all notes
   const allNotes = records
@@ -46,12 +46,12 @@ ${firstRecord.ret ? `🔄 Return by  : ${firstRecord.ret}\n` : ''}`;
     .join('; ');
 
   if (allNotes) {
-    message += `📝 Notes : ${allNotes}\n`;
+    message += `▶ Notes : ${allNotes}\n`;
   }
 
   // Add UPI payment information if teacher has UPI ID and payment is pending
   if (teacher?.upiId && firstRecord.paymentStatus === 'pending') {
-    message += `\n💳 *UPI Payment Details:*
+    message += `\n*-- UPI Payment Details --*
 UPI ID: ${teacher.upiId}
 Amount: ₹${totalAmount}
 Payee: ${teacher.name}
@@ -59,6 +59,26 @@ Payee: ${teacher.name}
   }
 
   message += `\n_Shree Academy — Authorized Receipt_`;
+
+  try {
+    const shareRecords = records.map(r => ({
+      student: r.student,
+      cls: r.cls,
+      date: r.date,
+      book: r.book,
+      qty: r.qty,
+      price: r.price,
+      paymentStatus: r.paymentStatus,
+      supplier: r.supplier,
+      notes: r.notes
+    }));
+    const shareTeacher = teacher ? { name: teacher.name, upiId: teacher.upiId } : null;
+    const shareData = btoa(encodeURIComponent(JSON.stringify({ records: shareRecords, teacher: shareTeacher })));
+    const link = `${window.location.origin}/?share=${shareData}`;
+    message += `\n\n🔗 *View & Download PDF:* \n${link}`;
+  } catch (e) {
+    console.error('Failed to generate share link', e);
+  }
 
   return message;
 };

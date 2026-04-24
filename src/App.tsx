@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { TabType, BookRecord } from './types';
+import React, { useState, useRef, useEffect } from 'react';
+import { TabType, BookRecord, Teacher } from './types';
 import { useRecords } from './hooks/useRecords';
 import { useToast } from './hooks/useToast';
 import { useAuth } from './hooks/useAuth';
@@ -23,10 +23,43 @@ const App: React.FC = () => {
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<BookRecord | null>(null);
+  const [sharedInvoiceData, setSharedInvoiceData] = useState<{ records: BookRecord[], teacher: Teacher | null } | null>(null);
   const formRef = useRef<{ resetForm: (keepStudent: boolean) => void } | null>(null);
 
   const { records, stats, addRecords, deleteRecord, updateRecord, clearAllRecords, importRecords } = useRecords();
   const { toasts, addToast, removeToast } = useToast();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shareParam = params.get('share');
+    if (shareParam) {
+      try {
+        const decoded = JSON.parse(decodeURIComponent(atob(shareParam)));
+        if (decoded && decoded.records) {
+          setSharedInvoiceData(decoded);
+        }
+      } catch (e) {
+        console.error('Invalid share link', e);
+      }
+    }
+  }, []);
+
+  // Show shared invoice directly if it exists, bypassing login
+  if (sharedInvoiceData) {
+    return (
+      <div className="min-h-screen bg-background">
+        <InvoiceModal
+          records={sharedInvoiceData.records}
+          teacher={sharedInvoiceData.teacher || null}
+          isOpen={true}
+          onClose={() => { window.location.href = '/' }}
+          onPrint={() => {}}
+          onShareWhatsApp={() => {}}
+          isSharedView={true}
+        />
+      </div>
+    );
+  }
 
   // Show login screen if not authenticated
   if (!isAuthenticated) {
