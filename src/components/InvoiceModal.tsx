@@ -5,6 +5,8 @@ import { generateUPIPaymentUrl } from '../utils/upi';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { QRCodeComponent } from './QRCode';
+import html2pdf from 'html2pdf.js';
+import QRCode from 'qrcode';
 
 interface InvoiceModalProps {
   records: BookRecord[];
@@ -143,7 +145,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
               </tbody>
             </table>
 
-            ${allNotes ? `<div style="font-size: 12px; color: #666; margin-top: 8px; padding: 8px 10px; background: #f5f5f0; border-radius: 6px;">📝 Notes: ${allNotes}</div>` : ''}
+            ${allNotes ? '<div style="font-size: 12px; color: #666; margin-top: 8px; padding: 8px 10px; background: #f5f5f0; border-radius: 6px;">📝 Notes: ' + allNotes + '</div>' : ''}
 
             <div class="inv-footer">
               <div class="inv-sign">
@@ -165,6 +167,179 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
     printWindow.document.close();
   };
 
+  const handleSharePDF = async () => {
+    // Generate table rows for all books
+    const bookRows = records.map(record => {
+      const unitPrice = record.price || 0;
+      const qty = record.qty || 0;
+      const total = calculateTotal(unitPrice, qty);
+      return `
+        <tr>
+          <td>${record.book}${record.supplier ? `<br><small style="color: #666;">Supplier: ${record.supplier}</small>` : ''}</td>
+          <td style="text-align: right">${formatPrice(unitPrice)}</td>
+          <td style="text-align: center">${qty}</td>
+          <td style="text-align: right; font-weight: 600;">${formatPrice(total)}</td>
+        </tr>
+      `;
+    }).join('');
+
+    // Collect all notes
+    const allNotes = records
+      .map(record => record.notes)
+      .filter(note => note && note.trim())
+      .join('; ');
+
+    // Generate QR code HTML if UPI URL exists
+    let qrCodeHtml = '';
+    if (upiUrl && teacher?.upiId) {
+      try {
+        const qrDataUrl = await QRCode.toDataURL(upiUrl, {
+          width: 120,
+          margin: 1,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        });
+        qrCodeHtml = `
+          <div style="margin-top: 20px; padding: 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div style="font-size: 14px; font-weight: 600; color: #166534;">
+                💳 Pay via UPI
+              </div>
+              <div style="font-size: 12px; color: #16a34a;">
+                Teacher: ${teacher.name}
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 16px;">
+              <div style="text-align: center;">
+                <img src="${qrDataUrl}" style="border: 1px solid #d1d5db; border-radius: 8px; padding: 8px; background: white; width: 120px; height: 120px;" />
+                <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                  Scan to pay ₹${totalAmount}
+                </div>
+              </div>
+              <div style="font-size: 12px; color: #374151; line-height: 1.6;">
+                <div><strong>UPI ID:</strong> ${teacher.upiId}</div>
+                <div><strong>Amount:</strong> ₹${totalAmount}</div>
+                <div><strong>Payee:</strong> ${teacher.name}</div>
+                <div style="margin-top: 8px; color: #16a34a; font-weight: 500;">
+                  Scan QR code with any UPI app
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      } catch (error) {
+        console.error('Error generating QR code:', error);
+      }
+    }
+
+    const invoiceHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Invoice — Shree Academy</title>
+          <style>
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body { font-family: 'Segoe UI', sans-serif; padding: 32px; max-width: 640px; margin: auto; color: #111; }
+            table { width: 100%; border-collapse: collapse; font-size: 13px; }
+            th, td { padding: 9px 10px; font-size: 13px; border-bottom: 1px solid #ddd; }
+            th { background: #E6F1FB; color: #0C447C; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+            .inv-total-row td { background: #E6F1FB; color: #0C447C; font-weight: 700; border-bottom: none; }
+            .inv-logo { font-size: 22px; font-weight: 800; color: #185FA5; }
+            .inv-header { display: flex; justify-content: space-between; margin-bottom: 18px; }
+            .inv-meta { font-size: 12px; line-height: 1.8; text-align: right; }
+            .inv-footer { margin-top: 20px; display: flex; justify-content: space-between; }
+            .inv-sign { font-size: 12px; color: #888; }
+            .inv-sign span { display: block; margin-top: 28px; border-top: 1px solid #ccc; padding-top: 4px; }
+            hr { border: none; border-top: 1px solid #ddd; margin: 12px 0; }
+          </style>
+        </head>
+        <body>
+          <div style="border: 1px solid #ddd; padding: 24px; background: #fff;">
+            <div class="inv-header">
+              <div>
+                <div class="inv-logo">Shree Academy</div>
+                <div style="font-size: 11px; color: #666; margin-top: 3px;">Book Issue Receipt / Invoice</div>
+              </div>
+              <div class="inv-meta">
+                <strong>Invoice #:</strong> ${invoiceNumber}<br>
+                <strong>Issue Date:</strong> ${firstRecord.date || new Date().toISOString().split('T')[0]}<br>
+                <strong>Total Books:</strong> ${totalBooks}<br>
+                ${firstRecord.ret ? `<strong>Return by:</strong> ${firstRecord.ret}<br>` : ''}
+              </div>
+            </div>
+            <hr />
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; margin-bottom: 14px;">
+              <div><span style="color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Student</span><br><strong>${studentName}</strong></div>
+              <div><span style="color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Class</span><br><strong>${studentClass || '—'}</strong></div>
+              <div><span style="color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Payment Status</span><br><strong style="color: ${firstRecord.paymentStatus === 'cash' ? '#16a34a' : firstRecord.paymentStatus === 'online' ? '#2563eb' : '#ca8a04'};">${firstRecord.paymentStatus === 'cash' ? '💰 Cash' : firstRecord.paymentStatus === 'online' ? '💳 Online' : '⏳ Pending'}</strong></div>
+              <div><span style="color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;">Issue Date</span><br><strong>${firstRecord.date || '—'}</strong></div>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 40%">Book Name</th>
+                  <th style="text-align: right">Price/Book</th>
+                  <th style="text-align: center">Qty</th>
+                  <th style="text-align: right">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${bookRows}
+                <tr class="inv-total-row">
+                  <td colspan="3" style="text-align: right; font-weight: 700;">Grand Total</td>
+                  <td style="text-align: right; font-size: 15px;">${formatPrice(totalAmount)}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            ${allNotes ? '<div style="font-size: 12px; color: #666; margin-top: 8px; padding: 8px 10px; background: #f5f5f0; border-radius: 6px;">📝 Notes: ' + allNotes + '</div>' : ''}
+
+            ${qrCodeHtml}
+
+            <div class="inv-footer">
+              <div class="inv-sign">
+                Authorized by
+                <span>Shree Academy</span>
+              </div>
+              <div style="font-size: 12px; color: #666; text-align: right;">
+                Thank you!<br>
+                <span style="font-size: 11px;">Please keep this receipt safe.</span>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Use html2pdf to generate PDF from the HTML
+    const tempElement = document.createElement('div');
+    tempElement.innerHTML = invoiceHtml;
+    tempElement.style.position = 'absolute';
+    tempElement.style.left = '-9999px';
+    document.body.appendChild(tempElement);
+
+    const options = {
+      margin: 0.5,
+      filename: `Invoice-${invoiceNumber}.pdf`,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'in' as const, format: 'a4' as const, orientation: 'portrait' as const }
+    };
+
+    try {
+      await html2pdf().set(options).from(tempElement).save();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      document.body.removeChild(tempElement);
+    }
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -174,6 +349,9 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
         <>
           <Button variant="whatsapp" onClick={() => onShareWhatsApp(records)}>
             💬 WhatsApp
+          </Button>
+          <Button onClick={handleSharePDF}>
+            📄 PDF
           </Button>
           <Button variant="primary" onClick={handlePrint}>
             🖨 Print
@@ -212,10 +390,10 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
           </div>
           <div>
             <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Payment Status</span><br />
-            <strong className={`${
+            <strong className={
               firstRecord.paymentStatus === 'cash' ? 'text-green-600' :
               firstRecord.paymentStatus === 'online' ? 'text-blue-600' : 'text-yellow-600'
-            }`}>
+            }>
               {firstRecord.paymentStatus === 'cash' ? '💰 Cash' :
                firstRecord.paymentStatus === 'online' ? '💳 Online' : '⏳ Pending'}
             </strong>

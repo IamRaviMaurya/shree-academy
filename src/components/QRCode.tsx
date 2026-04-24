@@ -1,5 +1,5 @@
 import React from 'react';
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
 
 interface QRCodeComponentProps {
   value: string;
