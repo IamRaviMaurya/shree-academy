@@ -8,7 +8,7 @@ export const TEACHERS: Teacher[] = [
     username: 'kajal_teacher',
     password: 'Kajal@12344',
     subject: 'All Subjects',
-    upiId: 'kajal.teacher@upi'
+    upiId: '9930671325@axl'
   },
   {
     id: '002',
@@ -16,7 +16,7 @@ export const TEACHERS: Teacher[] = [
     username: 'dipali_teacher',
     password: 'Dipali@12345',
     subject: 'All Subjects',
-    upiId: 'dipali.teacher@upi'
+    upiId: '9930671325@axl'
   },
   {
     id: '003',
@@ -24,7 +24,7 @@ export const TEACHERS: Teacher[] = [
     username: 'varsha_teacher',
     password: 'Varsha@12345',
     subject: 'All Subjects',
-    upiId: 'varsha.teacher@upi'
+    upiId: '9930671325@axl'
   }
 ];
 
