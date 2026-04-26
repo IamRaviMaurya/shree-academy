@@ -17,33 +17,35 @@ export const useInventory = () => {
 
     let loadedBooks = loadInventory(currentTeacher.id);
 
-    // If completely empty, seed with fixedBooks for 10th
-    if (loadedBooks.length === 0) {
-      const seededBooks: InventoryBook[] = [];
-      Object.entries(fixedBookOptionsByClass).forEach(([cls, fixedBooks]) => {
-        fixedBooks.forEach(fb => {
-          // Determine category roughly based on title
+    let changed = false;
+
+    // Check against all fixedBookOptionsByClass and merge missing books
+    Object.entries(fixedBookOptionsByClass).forEach(([cls, fixedBooks]) => {
+      fixedBooks.forEach(fb => {
+        // Check if book with this title and class already exists
+        const exists = loadedBooks.some(b => b.cls === cls && b.title === fb.title);
+        if (!exists) {
           let category: 'textbook' | 'workbook' | 'notebook' | 'other' = 'other';
           const titleLower = fb.title.toLowerCase();
-          if (titleLower.includes('text')) category = 'textbook';
-          else if (titleLower.includes('work')) category = 'workbook';
-          else if (titleLower.includes('note') || titleLower.includes('diary')) category = 'notebook';
+          if (titleLower.includes('text') || titleLower.includes('bharati') || titleLower.includes('history') || titleLower.includes('science')) category = 'textbook';
+          if (titleLower.includes('work')) category = 'workbook';
+          if (titleLower.includes('note') || titleLower.includes('diary') || titleLower.includes('draw')) category = 'notebook';
 
-          seededBooks.push({
+          loadedBooks.push({
             id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15),
             title: fb.title,
             price: fb.price,
             category,
             cls,
-            supplier: fb.supplier,
+            supplier: fb.supplier || '',
           });
-        });
+          changed = true;
+        }
       });
+    });
 
-      if (seededBooks.length > 0) {
-        loadedBooks = seededBooks;
-        saveInventory(currentTeacher.id, seededBooks);
-      }
+    if (changed) {
+      saveInventory(currentTeacher.id, loadedBooks);
     }
 
     setBooks(loadedBooks);
