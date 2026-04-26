@@ -46,4 +46,15 @@ export interface LoginCredentials {
   password: string;
 }
 
-export type TabType = 'add' | 'records' | 'excel';
+export type BookCategory = 'textbook' | 'workbook' | 'notebook' | 'other';
+
+export interface InventoryBook {
+  id: string;
+  title: string;
+  price: number;
+  category: BookCategory;
+  cls: string;
+  supplier?: string;
+}
+
+export type TabType = 'add' | 'records' | 'inventory' | 'excel';

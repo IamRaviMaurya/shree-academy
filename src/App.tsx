@@ -11,6 +11,7 @@ import { StatsGrid } from './components/StatsGrid';
 import { AddRecordForm } from './components/AddRecordForm';
 import { RecordsTable } from './components/RecordsTable';
 import { ExcelPanel } from './components/ExcelPanel';
+import { InventoryPanel } from './components/InventoryPanel';
 import { InvoiceModal } from './components/InvoiceModal';
 import { EditRecordModal } from './components/EditRecordModal';
 import { ToastContainer } from './components/Toast';
@@ -187,6 +188,10 @@ const App: React.FC = () => {
             onExportTemplate={handleExportTemplate}
             onShowToast={addToast}
           />
+        )}
+
+        {activeTab === 'inventory' && (
+          <InventoryPanel onShowToast={addToast} />
         )}
       </main>
 

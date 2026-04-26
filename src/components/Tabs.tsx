@@ -11,6 +11,7 @@ export const Tabs: React.FC<TabsProps> = ({ activeTab, onTabChange }) => {
   const tabs = [
     { id: 'add' as TabType, label: '📘 Add Record', icon: '📘' },
     { id: 'records' as TabType, label: '📋 Records', icon: '📋' },
+    { id: 'inventory' as TabType, label: '📚 Manage Books', icon: '📚' },
     { id: 'excel' as TabType, label: '📊 Excel', icon: '📊' },
   ];
 

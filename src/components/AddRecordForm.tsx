@@ -1,7 +1,7 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { BookRecord, FormData } from '../types';
 import { getTodayString, calculateTotal } from '../utils/helpers';
-import { classOptions, getFixedBookOptionsForClass } from '../utils/fixedBooks';
+import { useInventory } from '../hooks/useInventory';
 import { Card } from './Card';
 import { Input } from './Input';
 import { Select } from './Select';
@@ -45,6 +45,7 @@ export const AddRecordForm = forwardRef<{ resetForm: (keepStudent: boolean) => v
         });
       }
       setSelectedBookIds([]);
+      setBookQuantities({});
       setTotal('');
     },
   }));
@@ -60,17 +61,23 @@ export const AddRecordForm = forwardRef<{ resetForm: (keepStudent: boolean) => v
     paymentStatus: 'pending',
   });
 
+  const { classes, getBooksByClass } = useInventory();
+
   const [total, setTotal] = useState<string>('');
   const [keepStudentInfo, setKeepStudentInfo] = useState<boolean>(false);
   const [selectedBookIds, setSelectedBookIds] = useState<string[]>([]);
+  const [bookQuantities, setBookQuantities] = useState<Record<string, number>>({});
 
   // Calculate total when price, quantity, or selected fixed books change
   useEffect(() => {
-    const selectedClassBooks = getFixedBookOptionsForClass(formData.cls);
+    const selectedClassBooks = getBooksByClass(formData.cls);
     const selectedBooks = selectedClassBooks.filter(book => selectedBookIds.includes(book.id));
 
     if (selectedBooks.length > 0) {
-      const calculatedTotal = selectedBooks.reduce((sum, book) => sum + book.price, 0);
+      const calculatedTotal = selectedBooks.reduce((sum, book) => {
+        const qty = bookQuantities[book.id] || 1;
+        return sum + (book.price * qty);
+      }, 0);
       setTotal(calculatedTotal > 0 ? calculatedTotal.toFixed(2) : '');
       return;
     }
@@ -79,16 +86,17 @@ export const AddRecordForm = forwardRef<{ resetForm: (keepStudent: boolean) => v
     const qty = parseInt(formData.qty) || 0;
     const calculatedTotal = calculateTotal(price, qty);
     setTotal(calculatedTotal > 0 ? calculatedTotal.toFixed(2) : '');
-  }, [formData.price, formData.qty, formData.cls, selectedBookIds]);
+  }, [formData.price, formData.qty, formData.cls, selectedBookIds, bookQuantities, getBooksByClass]);
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     if (field === 'cls') {
       setSelectedBookIds([]);
+      setBookQuantities({});
     }
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const selectedClassBooks = getFixedBookOptionsForClass(formData.cls);
+  const selectedClassBooks = getBooksByClass(formData.cls);
   const selectedBooks = selectedClassBooks.filter(book => selectedBookIds.includes(book.id));
   const useFixedBooks = selectedClassBooks.length > 0;
 
@@ -125,10 +133,11 @@ export const AddRecordForm = forwardRef<{ resetForm: (keepStudent: boolean) => v
 
     if (useFixedBooks) {
       for (const book of selectedBooks) {
+        const bookQty = bookQuantities[book.id] || 1;
         recordsToAdd.push({
           book: book.title,
           price: book.price,
-          qty: 1,
+          qty: bookQty,
           student: formData.student.trim(),
           cls: formData.cls.trim(),
           date: formData.date,
@@ -170,7 +179,10 @@ export const AddRecordForm = forwardRef<{ resetForm: (keepStudent: boolean) => v
             label="Class / Grade"
             value={formData.cls}
             onChange={(e) => handleInputChange('cls', e.target.value)}
-            options={classOptions}
+            options={[
+              { value: '', label: 'Select class' },
+              ...classes.map(c => ({ value: c, label: c }))
+            ]}
           />
 
           {useFixedBooks ? (
@@ -184,7 +196,7 @@ export const AddRecordForm = forwardRef<{ resetForm: (keepStudent: boolean) => v
                   onChange={handleBookSelection}
                   options={selectedClassBooks.map(book => ({
                     value: book.id,
-                    label: `${book.title} — ₹${book.price} — ${book.supplier}`,
+                    label: `[${book.category}] ${book.title} — ₹${book.price}${book.supplier ? ` — ${book.supplier}` : ''}`,
                   }))}
                 />
               </div>
@@ -194,8 +206,20 @@ export const AddRecordForm = forwardRef<{ resetForm: (keepStudent: boolean) => v
                   <div className="font-semibold text-gray-700 mb-2">Selected Books</div>
                   <ul className="list-disc list-inside space-y-1 text-gray-700">
                     {selectedBooks.map(book => (
-                      <li key={book.id}>
-                        {book.title} — ₹{book.price} — {book.supplier}
+                      <li key={book.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-1 gap-2 border-b border-gray-200 last:border-0">
+                        <div>
+                          <span className="capitalize font-medium">[{book.category}]</span> {book.title} — ₹{book.price}{book.supplier ? ` — ${book.supplier}` : ''}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <label className="text-xs text-gray-500 font-medium">Qty:</label>
+                          <input
+                            type="number"
+                            min="1"
+                            className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-primary-500 focus:border-primary-500"
+                            value={bookQuantities[book.id] || 1}
+                            onChange={(e) => setBookQuantities(prev => ({ ...prev, [book.id]: parseInt(e.target.value) || 1 }))}
+                          />
+                        </div>
                       </li>
                     ))}
                   </ul>

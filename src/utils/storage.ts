@@ -1,4 +1,4 @@
-import { BookRecord } from '../types';
+import { BookRecord, InventoryBook } from '../types';
 
 const getStorageKey = (teacherId: string, key: string): string => {
   return `sa_${teacherId}_${key}`;
@@ -44,6 +44,25 @@ export const saveNextId = (teacherId: string, nextId: number): void => {
     localStorage.setItem(getStorageKey(teacherId, 'nextid'), String(nextId));
   } catch (error) {
     console.error('Error saving next ID:', error);
+  }
+};
+
+export const loadInventory = (teacherId: string): InventoryBook[] => {
+  try {
+    const saved = localStorage.getItem(getStorageKey(teacherId, 'inventory'));
+    if (!saved) return [];
+    return JSON.parse(saved);
+  } catch (error) {
+    console.error('Error loading inventory:', error);
+    return [];
+  }
+};
+
+export const saveInventory = (teacherId: string, inventory: InventoryBook[]): void => {
+  try {
+    localStorage.setItem(getStorageKey(teacherId, 'inventory'), JSON.stringify(inventory));
+  } catch (error) {
+    console.error('Error saving inventory:', error);
   }
 };
 
