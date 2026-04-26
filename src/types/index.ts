@@ -14,6 +14,7 @@ export interface BookRecord {
   price: number;
   qty: number;
   student: string;
+  contactNumber?: string;
   cls: string;
   date: string;
   ret: string;
@@ -34,6 +35,7 @@ export interface FormData {
   price: string;
   qty: string;
   student: string;
+  contactNumber: string;
   cls: string;
   date: string;
   ret: string;

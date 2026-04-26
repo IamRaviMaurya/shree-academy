@@ -8,10 +8,10 @@ export const exportToExcel = (records: BookRecord[], isTemplate = false): void =
   let data: (string | number)[][];
 
   if (isTemplate) {
-    data = [['Book Name', 'Book Price (₹)', 'Quantity', 'Student Name', 'Class', 'Payment Status', 'Issue Date', 'Return Date', 'Notes']];
+    data = [['Book Name', 'Book Price (₹)', 'Quantity', 'Student Name', 'Contact Number', 'Class', 'Payment Status', 'Issue Date', 'Return Date', 'Notes']];
   } else {
     data = [
-      ['#', 'Book Name', 'Book Price (₹)', 'Quantity', 'Total Amount (₹)', 'Student Name', 'Class', 'Payment Status', 'Issue Date', 'Return Date', 'Notes'],
+      ['#', 'Book Name', 'Book Price (₹)', 'Quantity', 'Total Amount (₹)', 'Student Name', 'Contact Number', 'Class', 'Payment Status', 'Issue Date', 'Return Date', 'Notes'],
       ...records.map((record, index) => [
         index + 1,
         record.book,
@@ -19,6 +19,7 @@ export const exportToExcel = (records: BookRecord[], isTemplate = false): void =
         record.qty || 0,
         ((record.price || 0) * (record.qty || 0)),
         record.student,
+        record.contactNumber || '',
         record.cls || '',
         record.paymentStatus || 'pending',
         record.date || '',
@@ -33,11 +34,11 @@ export const exportToExcel = (records: BookRecord[], isTemplate = false): void =
       (sum, record) => sum + ((record.price || 0) * (record.qty || 0)),
       0
     );
-    data.push(['', 'TOTAL', '', totalQty, totalValue, '', '', '', '', '', '']);
+    data.push(['', 'TOTAL', '', totalQty, totalValue, '', '', '', '', '', '', '']);
   }
 
   const worksheet = XLSX.utils.aoa_to_sheet(data);
-  worksheet['!cols'] = [4, 22, 12, 8, 14, 18, 10, 12, 12, 12, 20].map(width => ({ wch: width }));
+  worksheet['!cols'] = [4, 22, 12, 8, 14, 18, 15, 10, 12, 12, 12, 20].map(width => ({ wch: width }));
 
   XLSX.utils.book_append_sheet(workbook, worksheet, isTemplate ? 'Template' : 'Records');
 

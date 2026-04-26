@@ -26,6 +26,7 @@ export const AddRecordForm = forwardRef<{ resetForm: (keepStudent: boolean) => v
           book: '',
           price: '',
           qty: '1',
+          contactNumber: '',
           date: getTodayString(),
           ret: '',
           notes: '',
@@ -37,6 +38,7 @@ export const AddRecordForm = forwardRef<{ resetForm: (keepStudent: boolean) => v
           price: '',
           qty: '1',
           student: '',
+          contactNumber: '',
           cls: '',
           date: getTodayString(),
           ret: '',
@@ -54,6 +56,7 @@ export const AddRecordForm = forwardRef<{ resetForm: (keepStudent: boolean) => v
     price: '',
     qty: '1',
     student: '',
+    contactNumber: '',
     cls: '',
     date: getTodayString(),
     ret: '',
@@ -139,6 +142,7 @@ export const AddRecordForm = forwardRef<{ resetForm: (keepStudent: boolean) => v
           price: book.price,
           qty: bookQty,
           student: formData.student.trim(),
+          contactNumber: formData.contactNumber.trim() || undefined,
           cls: formData.cls.trim(),
           date: formData.date,
           ret: formData.ret,
@@ -153,6 +157,7 @@ export const AddRecordForm = forwardRef<{ resetForm: (keepStudent: boolean) => v
         price: parseFloat(formData.price) || 0,
         qty: parseInt(formData.qty) || 1,
         student: formData.student.trim(),
+        contactNumber: formData.contactNumber.trim() || undefined,
         cls: formData.cls.trim(),
         date: formData.date,
         ret: formData.ret,
@@ -173,6 +178,13 @@ export const AddRecordForm = forwardRef<{ resetForm: (keepStudent: boolean) => v
             placeholder="e.g. Rahul Sharma"
             value={formData.student}
             onChange={(e) => handleInputChange('student', e.target.value)}
+          />
+
+          <Input
+            label="Parents Contact (Optional)"
+            placeholder="e.g. 9876543210"
+            value={formData.contactNumber}
+            onChange={(e) => handleInputChange('contactNumber', e.target.value)}
           />
 
           <Select

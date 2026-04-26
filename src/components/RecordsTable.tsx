@@ -101,7 +101,10 @@ export const RecordsTable: React.FC<RecordsTableProps> = ({
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <div className="font-semibold text-lg text-gray-900">{firstRecord.student}</div>
-                    <div className="text-sm text-gray-600">{firstRecord.cls || 'No Class'}</div>
+                    <div className="text-sm text-gray-600">
+                      {firstRecord.cls || 'No Class'}
+                      {firstRecord.contactNumber && <span className="ml-2">| 📞 {firstRecord.contactNumber}</span>}
+                    </div>
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-medium text-gray-900">{group.length} book{group.length > 1 ? 's' : ''}</div>
@@ -219,6 +222,7 @@ export const RecordsTable: React.FC<RecordsTableProps> = ({
                 <th className="text-left p-3 text-xs font-bold text-gray-600 uppercase tracking-wide">Qty</th>
                 <th className="text-left p-3 text-xs font-bold text-gray-600 uppercase tracking-wide">Total</th>
                 <th className="text-left p-3 text-xs font-bold text-gray-600 uppercase tracking-wide">Student</th>
+                <th className="text-left p-3 text-xs font-bold text-gray-600 uppercase tracking-wide">Contact</th>
                 <th className="text-left p-3 text-xs font-bold text-gray-600 uppercase tracking-wide">Class</th>
                 <th className="text-left p-3 text-xs font-bold text-gray-600 uppercase tracking-wide">Payment</th>
                 <th className="text-left p-3 text-xs font-bold text-gray-600 uppercase tracking-wide">Issue Date</th>
@@ -229,7 +233,7 @@ export const RecordsTable: React.FC<RecordsTableProps> = ({
             <tbody>
               {groupedRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="text-center py-8">
+                  <td colSpan={12} className="text-center py-8">
                     <div className="text-gray-600">
                       <div className="text-3xl mb-2">📚</div>
                       Koi matching record nahi mila.
@@ -293,6 +297,9 @@ export const RecordsTable: React.FC<RecordsTableProps> = ({
                         <div className="text-xs text-gray-500 mt-1">
                           {group.length} book{group.length > 1 ? 's' : ''}
                         </div>
+                      </td>
+                      <td className="p-3">
+                        <span className="text-gray-600 text-sm">{firstRecord.contactNumber ? `📞 ${firstRecord.contactNumber}` : '—'}</span>
                       </td>
                       <td className="p-3">
                         {firstRecord.cls ? (

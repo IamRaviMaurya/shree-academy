@@ -165,9 +165,49 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ onShowToast }) =
       )}
 
       {selectedClass && classBooks.length > 0 && (
-        <Card title={`Current Books in ${selectedClass}`}>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
+        <Card title={`Current Books in ${selectedClass}`} className="p-0 md:p-6 overflow-hidden">
+          {/* Mobile Card View */}
+          <div className="block md:hidden">
+            <div className="divide-y divide-gray-200 border-t border-gray-200 mt-2">
+              {classBooks.map((book) => (
+                <div key={book.id} className="p-4 bg-white hover:bg-gray-50">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex-1 pr-4 whitespace-normal">
+                      <div className="font-semibold text-gray-900 text-sm">{book.title}</div>
+                      <div className="text-xs text-gray-600 mt-1 capitalize">
+                        {book.category} {book.supplier && `• ${book.supplier}`}
+                      </div>
+                    </div>
+                    <div className="text-right whitespace-nowrap pl-2">
+                      <div className="font-bold text-success-600 text-sm">₹{book.price}</div>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-3 mt-3 border-t border-gray-100 pt-3">
+                    <button
+                      onClick={() => handleEdit(book)}
+                      className="text-primary-600 hover:text-primary-800 text-sm font-medium px-3 py-1 bg-primary-50 rounded"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm('Delete this book?')) {
+                          deleteBook(book.id);
+                        }
+                      }}
+                      className="text-red-600 hover:text-red-800 text-sm font-medium px-3 py-1 bg-red-50 rounded"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto mt-4 md:mt-0">
+            <table className="w-full text-sm text-left whitespace-nowrap">
               <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b">
                 <tr>
                   <th className="px-4 py-3">Title</th>
@@ -180,9 +220,9 @@ export const InventoryPanel: React.FC<InventoryPanelProps> = ({ onShowToast }) =
               <tbody>
                 {classBooks.map((book) => (
                   <tr key={book.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium">{book.title}</td>
+                    <td className="px-4 py-3 font-medium whitespace-normal min-w-[200px]">{book.title}</td>
                     <td className="px-4 py-3 capitalize">{book.category}</td>
-                    <td className="px-4 py-3">₹{book.price}</td>
+                    <td className="px-4 py-3 font-semibold text-success-600">₹{book.price}</td>
                     <td className="px-4 py-3">{book.supplier || '-'}</td>
                     <td className="px-4 py-3 text-right space-x-4">
                       <button

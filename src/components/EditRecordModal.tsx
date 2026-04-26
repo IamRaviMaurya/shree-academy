@@ -20,6 +20,7 @@ export const EditRecordModal: React.FC<EditRecordModalProps> = ({
 }) => {
   const [formData, setFormData] = useState({
     paymentStatus: 'pending' as 'pending' | 'cash' | 'online',
+    contactNumber: '',
     notes: '',
     date: '',
     ret: '',
@@ -30,6 +31,7 @@ export const EditRecordModal: React.FC<EditRecordModalProps> = ({
     if (record) {
       setFormData({
         paymentStatus: record.paymentStatus || 'pending',
+        contactNumber: record.contactNumber || '',
         notes: record.notes || '',
         date: record.date || '',
         ret: record.ret || '',
@@ -44,6 +46,9 @@ export const EditRecordModal: React.FC<EditRecordModalProps> = ({
     const updates: Partial<BookRecord> = {};
     if (formData.paymentStatus !== record.paymentStatus) {
       updates.paymentStatus = formData.paymentStatus;
+    }
+    if (formData.contactNumber !== (record.contactNumber || '')) {
+      updates.contactNumber = formData.contactNumber || undefined;
     }
     if (formData.notes !== (record.notes || '')) {
       updates.notes = formData.notes || undefined;
@@ -64,6 +69,7 @@ export const EditRecordModal: React.FC<EditRecordModalProps> = ({
   const handleClose = () => {
     setFormData({
       paymentStatus: 'pending',
+      contactNumber: '',
       notes: '',
       date: '',
       ret: '',
@@ -119,6 +125,17 @@ export const EditRecordModal: React.FC<EditRecordModalProps> = ({
               value={record.cls || ''}
               disabled
               className="bg-gray-50"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Contact Number
+            </label>
+            <Input
+              value={formData.contactNumber}
+              onChange={(e) => setFormData(prev => ({ ...prev, contactNumber: e.target.value }))}
+              placeholder="e.g. 9876543210"
             />
           </div>
 
