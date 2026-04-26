@@ -532,7 +532,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({
                 </div>
                 <div className="flex sm:block justify-center gap-2">
                   <strong className="text-gray-900 inline-block w-16 text-right sm:text-left">Payee:</strong>
-                  <span>{teacher.name}</span>
+                  <span>M S SHREE ACADEMY</span>
                 </div>
                 <div className="mt-3 text-green-700 font-semibold bg-green-100 inline-block px-3 py-1 rounded text-xs">
                   Scan QR code with any UPI app
